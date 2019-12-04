@@ -8,7 +8,7 @@ import Comments from '../components/assessement/comments';
 import {SINGLE_ACHIEVEMENT_QUERY} from '../graphql/achievement.query'
 
 const Achievement = (props) => {
-    const {data, loading, error} = useQuery(SINGLE_ACHIEVEMENT_QUERY(props.router.query.foo));
+    const {data, loading, error} = useQuery(SINGLE_ACHIEVEMENT_QUERY(props.router.query.id));
     if(loading){
         return <p>Loading...</p>
     }

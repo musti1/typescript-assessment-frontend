@@ -8,7 +8,7 @@ import Comments from '../components/assessement/comments';
 import {SINGLE_ITEM_QUERY} from '../graphql/item.query'
 
 const Item = (props) => {
-    const {data, loading, error} = useQuery(SINGLE_ITEM_QUERY(props.router.query.foo));
+    const {data, loading, error} = useQuery(SINGLE_ITEM_QUERY(props.router.query.id));
     if (loading) {
         return <p>Loading...</p>
     }

@@ -5,7 +5,7 @@ const columns = [
     {
         title: 'Id',
         dataIndex: 'id',
-        render: record => <Link href={{pathname: '/item', query: {foo: record}}}><a>{record}</a></Link>,
+        render: record => <Link href={{pathname: '/item', query: {id: record}}}><a>{record}</a></Link>,
     },
     {
         title: 'Name',
