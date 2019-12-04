@@ -1,0 +1,24 @@
+header {
+    border-bottom: 1px solid #e8e8e8;
+    margin-bottom: 50px;
+}
+header .wrapper,
+.wrapper {
+    width: 80%;
+    margin: 0 auto;
+}
+header .wrapper ul {
+    border: none;
+}
+header .wrapper ul .ant-menu-item.right {
+    float: right;
+}
+
+.login-wrapper {
+    width: 50%;
+    margin: 0 auto;
+}
+
+.login-wrapper h1 {
+    text-align: center;
+}
