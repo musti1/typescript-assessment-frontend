@@ -1,11 +1,16 @@
 import React from 'react';
 import { Table } from 'antd';
 import Link from 'next/link';
+
+import { ITEM_QUERY } from '../../graphql/item.query';
+import { graphql } from 'react-apollo';
+import * as compose from 'lodash.flowright';
+
 const columns = [
     {
         title: 'Id',
         dataIndex: 'id',
-        render: record => <Link href={{pathname: '/item', query: {id: record}}}><a>{record}</a></Link>,
+        render: record => <Link href={{ pathname: '/item', query: { id: record } }}><a>{record}</a></Link>,
     },
     {
         title: 'Name',
@@ -32,11 +37,11 @@ const columns = [
 ];
 
 class Creatures extends React.Component {
-    constructor(props){
-        super(props)
-    }
     render() {
-        const data = this.props.items.map((item, index) => ({ ...item, key: index}));
+        let data = [];
+        if (!this.props.data.loading) {
+            data = this.props.data.getAllItems.map((item, index) => ({ ...item, key: index }));
+        }
         return (
             <>
                 <Table dataSource={data} columns={columns} />
@@ -45,4 +50,6 @@ class Creatures extends React.Component {
     }
 }
 
-export default Creatures;
+export default compose(
+    graphql(ITEM_QUERY)
+)(Creatures);

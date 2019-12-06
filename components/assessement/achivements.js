@@ -1,12 +1,17 @@
 import React from 'react';
-import {Table} from 'antd';
+import { Table } from 'antd';
 import Link from 'next/link';
+
+import { ACHIEVEMENT_QUERY } from '../../graphql/achievement.query';
+import { graphql } from 'react-apollo';
+import * as compose from 'lodash.flowright';
+
 
 const columns = [
     {
         title: 'Id',
         dataIndex: 'id',
-        render: record => <Link href={{pathname: '/achivement', query: {id: record}}}><a>{record}</a></Link>,
+        render: record => <Link href={{ pathname: '/achivement', query: { id: record } }}><a>{record}</a></Link>,
     },
     {
         title: 'Title',
@@ -31,19 +36,21 @@ const columns = [
 
 ];
 
-class Creatures extends React.Component {
-    constructor(props) {
-        super(props)
-    }
+class Achievements extends React.Component {
 
     render() {
-        const data = this.props.achievements.map((achievement, index) => ({ ...achievement, key: index}));
+        let data = [];
+        if (!this.props.data.loading) {
+            data = this.props.data.getAllAchievement.map((achievement, index) => ({ ...achievement, key: index }));
+        }
         return (
             <>
-                <Table dataSource={data} columns={columns}/>
+                <Table dataSource={data} columns={columns} />
             </>
         )
     }
 }
 
-export default Creatures;
+export default compose(
+    graphql(ACHIEVEMENT_QUERY)
+)(Achievements);

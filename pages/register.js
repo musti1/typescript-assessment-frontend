@@ -1,15 +1,44 @@
 import React from 'react';
-import { Form, Icon, Input, Button } from 'antd';
-import Link from 'next/link'
+import { Form, Input, Button } from 'antd';
+import Link from 'next/link';
+import Router from 'next/router';
 import Head from 'next/head';
 import Nav from '../components/nav';
 
 class Register extends React.Component {
+    componentDidMount() {
+        const userDetails = sessionStorage.getItem("userDetails")
+        if (!!userDetails) {
+            Router.push('/');
+        }
+    }
     handleSubmit = e => {
         e.preventDefault();
         this.props.form.validateFields((err, values) => {
             if (!err) {
-                console.log('Received values of form: ', values);
+                let data = {
+                    firstName: values.firstname,
+                    lastName: values.lastname,
+                    email: values.email,
+                    password: values.password
+                }
+                fetch('http://192.168.1.185:3000/user/register', {
+                    method: 'POST',
+                    headers: {
+                        'content-type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                    .then(res => {
+                        if (res.status === 200) {
+                            return res.json().then(res => {
+                                sessionStorage.setItem('userDetails', JSON.stringify(res.user));
+                                Router.push('/');
+                            })
+                        }
+                    }).catch(err => {
+                        console.log('error', err);
+                    })
             }
         });
     };
@@ -27,12 +56,20 @@ class Register extends React.Component {
                     <h1>Register </h1>
                     <Form onSubmit={this.handleSubmit} className="login-form">
                         <Form.Item>
-                            {getFieldDecorator('username', {
+                            {getFieldDecorator('firstname', {
                                 rules: [{ required: true, message: 'Please input your username!' }],
                             })(
                                 <Input
-                                    prefix={<Icon type="user" style={{ color: 'rgba(0,0,0,.25)' }} />}
-                                    placeholder="Username"
+                                    placeholder="Firstname"
+                                />,
+                            )}
+                        </Form.Item>
+                        <Form.Item>
+                            {getFieldDecorator('lastname', {
+                                rules: [{ required: true, message: 'Please input your username!' }],
+                            })(
+                                <Input
+                                    placeholder="Lastname"
                                 />,
                             )}
                         </Form.Item>
@@ -41,7 +78,6 @@ class Register extends React.Component {
                                 rules: [{ required: true, message: 'Please input your email!' }],
                             })(
                                 <Input
-                                    prefix={<Icon type="user" style={{ color: 'rgba(0,0,0,.25)' }} />}
                                     placeholder="Email"
                                 />,
                             )}
@@ -51,7 +87,6 @@ class Register extends React.Component {
                                 rules: [{ required: true, message: 'Please input your Password!' }],
                             })(
                                 <Input
-                                    prefix={<Icon type="lock" style={{ color: 'rgba(0,0,0,.25)' }} />}
                                     type="password"
                                     placeholder="Password"
                                 />,

@@ -22,3 +22,22 @@ header .wrapper ul .ant-menu-item.right {
 .login-wrapper h1 {
     text-align: center;
 }
+
+.wrapper.details {
+    overflow: hidden;
+}
+.wrapper.details .row {
+    margin-bottom: 15px;
+}
+.wrapper.details .row label {
+    font-weight: 700;
+    width: 25%;
+    display: inline-block;
+}
+.wrapper.details .row h3 {
+    font-weight: 900;
+}
+.wrapper.details .cloumn {
+    width: 50%;
+    float: left;
+}

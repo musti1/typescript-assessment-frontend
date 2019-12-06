@@ -8,23 +8,51 @@
 
 
 
+
+
+// import React from 'react';
+// import App from 'next/app';
+// import { ApolloProvider } from '@apollo/react-hooks';
+// import '../styles/styles.css';
+
+// import withData from '../util/apollo-client';
+
+// class MyApp extends App {
+//     render() {
+//         const { Component, pageProps, apollo } = this.props;
+//         return (
+//             <ApolloProvider client={apollo}>
+//                 <Component {...pageProps} />
+//             </ApolloProvider>
+//         );
+//     }
+// }
+
+// export default withData(MyApp);
+
+
+
+
+
+
 import React from 'react';
 import App from 'next/app';
-import { ApolloProvider } from '@apollo/react-hooks';
 import '../styles/styles.css';
-
+import ApolloClient from 'apollo-boost';
+import { ApolloProvider } from 'react-apollo';
 import withData from '../util/apollo-client';
+
+const client = new ApolloClient({ uri: 'http://192.168.1.185:3000/graphql' });
 
 class MyApp extends App {
     render() {
         const { Component, pageProps, apollo } = this.props;
         return (
-            <ApolloProvider client={apollo}>
+            <ApolloProvider client={client}>
                 <Component {...pageProps} />
             </ApolloProvider>
         );
     }
 }
 
-// Wraps all components in the tree with the data provider
 export default withData(MyApp);

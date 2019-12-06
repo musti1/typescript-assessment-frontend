@@ -1,15 +1,42 @@
 import React from 'react';
 import { Form, Icon, Input, Button } from 'antd';
-import Link from 'next/link'
+import Router from 'next/router';
+import Link from 'next/link';
 import Head from 'next/head';
 import Nav from '../components/nav';
 
 class Login extends React.Component {
+    componentDidMount() {
+        const userDetails = sessionStorage.getItem("userDetails")
+        if (!!userDetails) {
+            Router.push('/');
+        }
+    }
     handleSubmit = e => {
         e.preventDefault();
         this.props.form.validateFields((err, values) => {
             if (!err) {
-                console.log('Received values of form: ', values);
+                let data = {
+                    email: values.username,
+                    password: values.password
+                }
+                fetch('http://192.168.1.185:3000/user/login', {
+                    method: 'POST',
+                    headers: {
+                        'content-type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                    .then(res => {
+                        if (res.status === 200) {
+                            return res.json().then(res => {
+                                sessionStorage.setItem('userDetails', JSON.stringify(res.user));
+                                Router.push('/');
+                            })
+                        }
+                    }).catch(err => {
+                        console.log('error', err);
+                    })
             }
         });
     };

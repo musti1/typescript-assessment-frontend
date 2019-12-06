@@ -1,25 +1,12 @@
 import React from 'react';
 import { Comment, Avatar, Form, Button, List, Input, Icon, Modal } from 'antd';
-import moment from 'moment';
+import { GET_ACHIEVEMENT_COMMENTS_QUERY, ADD_ACHIEVEMENT_COMMENTS_QUERY, EDIT_ACHIEVEMENT_COMMENTS_QUERY, DELETE_ACHIEVEMENT_COMMENTS_QUERY } from '../../graphql/achievement.query';
+// import { GET_ITEM_COMMENTS_QUERY, ADD_ITEM_COMMENT_QUERY, EDIT_ITEM_COMMENT_QUERY, DELETE_ITEM_COMMENT_QUERY } from '../../graphql/item.query';
+import { graphql } from 'react-apollo';
+import * as compose from 'lodash.flowright';
 
 const { confirm } = Modal;
 const { TextArea } = Input;
-const CommentList = ({ comments, showDeleteConfirm }) => (
-    <List
-        dataSource={comments}
-        header={`${comments.length} ${comments.length > 1 ? 'comments' : 'comment'}`}
-        itemLayout="horizontal"
-        renderItem={props => {
-            return (
-                <div className='comment' style={{ position: 'relative' }}>
-                    <Comment {...props} />
-                    <Icon style={{ position: 'absolute', top: 20, left: 190, cursor: 'pointer' }} type="edit" />
-                    <Icon onClick={() => showDeleteConfirm(props)} style={{ position: 'absolute', top: 20, left: 210, cursor: 'pointer' }} type="delete" />
-                </div>
-            )
-        }}
-    />
-);
 
 const Editor = ({ onChange, onSubmit, submitting, value }) => (
     <div>
@@ -35,11 +22,27 @@ const Editor = ({ onChange, onSubmit, submitting, value }) => (
 );
 
 class Comments extends React.Component {
-    state = {
-        comments: [],
-        submitting: false,
-        value: '',
-    };
+    constructor(props) {
+        super(props);
+        this.state = {
+            comments: [],
+            submitting: false,
+            value: '',
+            userDetails: undefined
+        };
+    }
+
+    async componentDidMount() {
+        let userDetails = sessionStorage.getItem("userDetails");
+        userDetails = JSON.parse(userDetails);
+
+        const data = await this.props.getAchivementComments({
+            variables: {
+                achievementId: 6
+            }
+        })
+        this.setState({ userDetails, comments: data.data.getAchievementComments });
+    }
 
     handleSubmit = () => {
         if (!this.state.value) {
@@ -47,68 +50,84 @@ class Comments extends React.Component {
         }
 
         this.setState({ submitting: true });
-
-        setTimeout(() => {
-            this.setState({
-                submitting: false,
-                value: '',
-                comments: [
-                    {
-                        key: Date.now(),
-                        author: 'ali',
-                        avatar: 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png',
-                        content: <p>{this.state.value}</p>,
-                        datetime: moment().fromNow(),
-                    },
-                    ...this.state.comments,
-                ],
-            });
-        }, 1000);
+        let data = {
+            comment: this.state.value,
+            userId: this.state.userDetails.userId,
+            itemId: this.props.itemId
+        }
+        this.setState({ submitting: false });
     };
 
     handleChange = e => {
         this.setState({ value: e.target.value });
     };
 
-    showDeleteConfirm = (data) => {
-        confirm({
-            title: 'Are you sure delete this comment?',
-            // content: 'Some descriptions',
-            okText: 'Yes',
-            okType: 'danger',
-            cancelText: 'No',
-            onOk() {
-                console.log('OK', data);
-            },
-            onCancel() {
-                console.log('Cancel', data);
-            },
+    showDeleteConfirm = async (data) => {
+        const res = await this.confirmModal();
+        if (res) {
+            const data = await this.props.deleteAchivementComment({
+                variables: {
+                    commentId: '4df7e360-1782-11ea-9330-9d25b1d72cac'
+                }
+            })
+            if (data.data.deleteAchievementComment) {
+                const data = await this.props.getAchivementComments({
+                    variables: {
+                        achievementId: 6
+                    }
+                });
+                this.setState({ comments: data.data.getAchievementComments });
+            }
+        }
+    }
+
+    confirmModal = () => {
+        return new Promise((resolve) => {
+            confirm({
+                title: 'Are you sure delete this comment?',
+                okText: 'Yes',
+                okType: 'danger',
+                cancelText: 'No',
+                onOk() {
+                    return resolve(true);
+                },
+                onCancel() {
+                    return resolve(false);
+                }
+            });
         });
     }
 
     render() {
         const { comments, submitting, value } = this.state;
-
         return (
             <div>
-                {comments.length > 0 && <CommentList comments={comments} showDeleteConfirm={this.showDeleteConfirm} />}
-                <Comment
-                    avatar={
-                        <Avatar
-                            src="https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png"
-                            alt="Han Solo"
-                        />
+                <div className='comments'>
+                    {
+                        comments.length > 0 &&
+                        comments.map(comment => {
+                            return (
+                                <div key={comment.commentId} className='comment'>
+                                    <span>{comment.comment}</span>
+                                    <Icon style={{ marginLeft: 20, marginRight: 10 }} type="edit" />
+                                    <Icon onClick={() => this.showDeleteConfirm(comment.commentId)} type="delete" />
+                                </div>
+                            )
+                        })
                     }
-                    content={
-                        <Editor
-                            submitting={submitting}
-                            value={value}
-                        />
-                    }
+                </div>
+                <Editor
+                    onChange={this.handleChange}
+                    onSubmit={this.handleSubmit}
+                    submitting={submitting}
+                    value={value}
                 />
             </div>
         );
     }
 }
 
-export default Comments;
+export default compose(
+    graphql(GET_ACHIEVEMENT_COMMENTS_QUERY, { name: "getAchivementComments" }),
+    graphql(DELETE_ACHIEVEMENT_COMMENTS_QUERY, { name: "deleteAchivementComment" })
+)(Comments);
