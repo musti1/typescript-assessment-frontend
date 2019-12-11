@@ -12,10 +12,20 @@ import { SINGLE_ACHIEVEMENT_QUERY } from '../graphql/achievement.query';
 const Achievement = (props) => {
     const { data, loading, error } = useQuery(SINGLE_ACHIEVEMENT_QUERY(props.router.query.id));
     if (loading) {
-        return <p>Loading...</p>
+        return (<div>
+            <Head>
+                <title>Achivement</title>
+                <link rel="icon" href="/favicon.ico" />
+            </Head>
+            <p>Loading...</p></div>)
     }
     if (error) {
-        return <p>Error...</p>
+        return (<div>
+            <Head>
+                <title>Achivement</title>
+                <link rel="icon" href="/favicon.ico" />
+            </Head>
+            <p>Loading...</p></div>)
     }
     return (
         <>
@@ -70,7 +80,7 @@ const Achievement = (props) => {
                     </div>
                 </Card>
                 <Card>
-                    <Comments itemId={props.router.query.id} type='achivement' />
+                    <Comments achievementId={props.router.query.id} type='achievement' />
                 </Card>
             </div>
         </>

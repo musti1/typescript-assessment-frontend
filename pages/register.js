@@ -22,7 +22,7 @@ class Register extends React.Component {
                     email: values.email,
                     password: values.password
                 }
-                fetch('http://192.168.1.185:3000/user/register', {
+                fetch('http://localhost:4000/user/register', {
                     method: 'POST',
                     headers: {
                         'content-type': 'application/json'

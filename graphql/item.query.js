@@ -146,35 +146,35 @@ export const SINGLE_ITEM_QUERY = (itemId) => {
     }
 `};
 
-export const GET_ITEM_COMMENTS_QUERY = (itemId) => {
-    return gql`
-    { 
-        getItemComments(itemId: ${itemId}){
+export const GET_ITEM_COMMENTS_QUERY = gql`
+    mutation($itemId: Float!){ 
+        getItemComments(itemId: $itemId){
             itemId
             comment
             userId
             commentId
+            userDetail {
+    			firstName
+    			lastName
+  			}
         }
     }
-`};
+`;
 
-export const ADD_ITEM_COMMENT_QUERY = (comment, userId, itemId) => {
-    return gql`
-    { 
-        addItemComment(comment:${comment}, userId: ${userId}, itemId: ${itemId})
+export const ADD_ITEM_COMMENT_QUERY =  gql`
+     mutation($itemId: Float!, $comment: String!, $userId: String!){ 
+        addItemComment(comment:$comment, userId: $userId, itemId: $itemId)
     }
-`};
+`;
 
-export const EDIT_ITEM_COMMENT_QUERY = (comment, commentId) => {
-    return gql`
-    { 
-        editItemComment(comment:${comment}, commentId: ${commentId})
+export const EDIT_ITEM_COMMENT_QUERY = gql`
+    mutation($comment: String!, $commentId: String!){ 
+        editItemComment(comment:$comment, commentId: $commentId)
     }
-`};
+`;
 
-export const DELETE_ITEM_COMMENT_QUERY = (commentId) => {
-    return gql`
-    { 
-        deleteItemComment(commentId:${commentId})
+export const DELETE_ITEM_COMMENT_QUERY = gql`
+    mutation($commentId: String!){ 
+        deleteItemComment(commentId:$commentId)
     }
-`};
+`;

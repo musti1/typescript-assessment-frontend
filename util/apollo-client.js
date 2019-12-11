@@ -5,7 +5,7 @@ import { createHttpLink } from 'apollo-link-http';
 import fetch from 'isomorphic-unfetch';
 
 // Update the GraphQL endpoint to any instance of GraphQL that you like
-const GRAPHQL_URL = 'http://192.168.1.185:3000/graphql';
+const GRAPHQL_URL = 'http://localhost:4000/graphql';
 
 const link = createHttpLink({
     fetch, // Switches between unfetch & node-fetch for client & server.

@@ -1,22 +1,39 @@
 import React from 'react';
-import { Comment, Avatar, Form, Button, List, Input, Icon, Modal } from 'antd';
-import { GET_ACHIEVEMENT_COMMENTS_QUERY, ADD_ACHIEVEMENT_COMMENTS_QUERY, EDIT_ACHIEVEMENT_COMMENTS_QUERY, DELETE_ACHIEVEMENT_COMMENTS_QUERY } from '../../graphql/achievement.query';
-// import { GET_ITEM_COMMENTS_QUERY, ADD_ITEM_COMMENT_QUERY, EDIT_ITEM_COMMENT_QUERY, DELETE_ITEM_COMMENT_QUERY } from '../../graphql/item.query';
-import { graphql } from 'react-apollo';
+import {Comment, Avatar, Form, Button, List, Input, Icon, Modal} from 'antd';
+import {
+    GET_ACHIEVEMENT_COMMENTS_QUERY,
+    ADD_ACHIEVEMENT_COMMENTS_QUERY,
+    EDIT_ACHIEVEMENT_COMMENTS_QUERY,
+    DELETE_ACHIEVEMENT_COMMENTS_QUERY
+} from '../../graphql/achievement.query';
+import {
+    GET_ITEM_COMMENTS_QUERY,
+    ADD_ITEM_COMMENT_QUERY,
+    EDIT_ITEM_COMMENT_QUERY,
+    DELETE_ITEM_COMMENT_QUERY
+} from '../../graphql/item.query';
+import {graphql} from 'react-apollo';
 import * as compose from 'lodash.flowright';
 
-const { confirm } = Modal;
-const { TextArea } = Input;
+const {confirm} = Modal;
+const {TextArea} = Input;
 
-const Editor = ({ onChange, onSubmit, submitting, value }) => (
+const Editor = ({onChange, onSubmit, submitting, value, flag, onSubmitEdit}) => (
     <div>
         <Form.Item>
-            <TextArea rows={4} onChange={onChange} value={value} />
+            <TextArea rows={4} onChange={onChange} value={value}/>
         </Form.Item>
         <Form.Item>
-            <Button htmlType="submit" loading={submitting} onClick={onSubmit} type="primary">
-                Add Comment
-            </Button>
+            {
+                flag ?
+                    <Button htmlType="submit" loading={submitting} onClick={onSubmitEdit} type="primary">
+                        Edit Comment
+                    </Button>
+                :
+                <Button htmlType="submit" loading={submitting} onClick={onSubmit} type="primary">
+                    Add Comment
+                </Button>
+            }
         </Form.Item>
     </div>
 );
@@ -28,78 +45,130 @@ class Comments extends React.Component {
             comments: [],
             submitting: false,
             value: '',
-            userDetails: undefined
+            userDetails: undefined,
+            category: props.type,
+            editFlag: false,
+            commentId: ''
         };
     }
 
-    async componentDidMount() {
+    getComments = async () => {
+        let comments = [];
+        if (this.state.category === 'achievement') {
+            const data = await this.props.getAchievementComments({
+                variables: {
+                    achievementId: Number(this.props.achievementId)
+                }
+            });
+            comments = data.data.getAchievementComments;
+        }
+        if (this.state.category === 'item') {
+            const data = await this.props.getItemComments({
+                variables: {
+                    itemId: Number(this.props.itemId)
+                }
+            });
+            comments = data.data.getItemComments;
+        }
+        return comments;
+    };
+
+    setUserDetail = () => {
         let userDetails = sessionStorage.getItem("userDetails");
         userDetails = JSON.parse(userDetails);
+        return userDetails;
+    };
 
-        const data = await this.props.getAchivementComments({
-            variables: {
-                achievementId: 6
-            }
-        })
-        this.setState({ userDetails, comments: data.data.getAchievementComments });
+    async componentDidMount() {
+        const userDetails = this.setUserDetail();
+        const comments = await this.getComments();
+        this.setState({userDetails, comments});
     }
 
-    handleSubmit = () => {
+    handleSubmit = async () => {
         if (!this.state.value) {
             return;
         }
 
-        this.setState({ submitting: true });
-        let data = {
-            comment: this.state.value,
-            userId: this.state.userDetails.userId,
-            itemId: this.props.itemId
+        this.setState({submitting: true});
+        if (this.state.category === 'item') {
+            console.log('hereeeeeeeeee')
+            await this.props.addItemComment({
+                variables: {
+                    comment: this.state.value,
+                    userId: this.state.userDetails.userId,
+                    itemId: Number(this.props.itemId)
+                }
+            })
         }
-        this.setState({ submitting: false });
+        if (this.state.category === 'achievement') {
+            await this.props.addAchievementComment({
+                variables: {
+                    comment: this.state.value,
+                    userId: this.state.userDetails.userId,
+                    achievementId:  Number(this.props.achievementId)
+                }
+            })
+        }
+        const comments = await this.getComments();
+        this.setState({submitting: false, comments, value: ''});
     };
 
     handleChange = e => {
-        this.setState({ value: e.target.value });
+        this.setState({value: e.target.value});
     };
 
-    showDeleteConfirm = async (data) => {
-        const res = await this.confirmModal();
-        if (res) {
-            const data = await this.props.deleteAchivementComment({
+    showDeleteConfirm = async (id) => {
+        if (this.state.category === 'item') {
+            await this.props.deleteItemComment({
                 variables: {
-                    commentId: '4df7e360-1782-11ea-9330-9d25b1d72cac'
-                }
-            })
-            if (data.data.deleteAchievementComment) {
-                const data = await this.props.getAchivementComments({
-                    variables: {
-                        achievementId: 6
-                    }
-                });
-                this.setState({ comments: data.data.getAchievementComments });
-            }
-        }
-    }
-
-    confirmModal = () => {
-        return new Promise((resolve) => {
-            confirm({
-                title: 'Are you sure delete this comment?',
-                okText: 'Yes',
-                okType: 'danger',
-                cancelText: 'No',
-                onOk() {
-                    return resolve(true);
-                },
-                onCancel() {
-                    return resolve(false);
+                    commentId: id
                 }
             });
-        });
+        }
+        if (this.state.category === 'achievement') {
+            await this.props.deleteAchievementComment({
+                variables: {
+                    commentId: id
+                }
+            });
+        }
+
+        const comments = await this.getComments();
+        this.setState({comments});
+    };
+    editIconClicked = (comment) => {
+        this.setState({value: comment.comment, editFlag: true, commentId: comment.commentId})
+    };
+
+    editHandler = async () => {
+        if (!this.state.value) {
+            return;
+        }
+
+        this.setState({submitting: true});
+        if (this.state.category === 'item') {
+            await this.props.editItemComment({
+                variables: {
+                    comment: this.state.value,
+                    commentId: this.state.commentId
+                }
+            })
+        }
+        if (this.state.category === 'achievement') {
+            await this.props.editAchievementComment({
+                variables: {
+                    comment: this.state.value,
+                    commentId: this.state.commentId
+                }
+            })
+        }
+        const comments = await this.getComments();
+        this.setState({submitting: false, comments, value: '', editFlag: false});
     }
 
     render() {
-        const { comments, submitting, value } = this.state;
+        const {comments, submitting, value} = this.state;
         return (
             <div>
                 <div className='comments'>
@@ -107,10 +176,20 @@ class Comments extends React.Component {
                         comments.length > 0 &&
                         comments.map(comment => {
                             return (
-                                <div key={comment.commentId} className='comment'>
-                                    <span>{comment.comment}</span>
-                                    <Icon style={{ marginLeft: 20, marginRight: 10 }} type="edit" />
-                                    <Icon onClick={() => this.showDeleteConfirm(comment.commentId)} type="delete" />
+                                <div key={comment.commentId} className='comment' style={{ marginBottom: 10 }}>
+                                    <div className='user'>
+                                        <Avatar size="small" icon="user" />
+                                        <span style={{ marginLeft: 10 }}>{`${comment.userDetail.firstName} ${comment.userDetail.lastName || ''}`}</span>
+                                    </div>
+                                    <span style={{ marginLeft: 30, backgroundColor: '#ccc', padding: 10, borderRadius: 10, display: 'inline-block' }}>{comment.comment}</span>
+                                    {
+                                        this.state.userDetails.userId === comment.userId &&
+                                        <Icon onClick={() => this.editIconClicked(comment)} style={{marginLeft: 20, marginRight: 10}} type="edit"/>
+                                    }
+                                    {
+                                        this.state.userDetails.userId === comment.userId &&
+                                        <Icon onClick={() => this.showDeleteConfirm(comment.commentId)} type="delete"/>
+                                    }
                                 </div>
                             )
                         })
@@ -119,8 +198,10 @@ class Comments extends React.Component {
                 <Editor
                     onChange={this.handleChange}
                     onSubmit={this.handleSubmit}
+                    onSubmitEdit={this.editHandler}
                     submitting={submitting}
                     value={value}
+                    flag={this.state.editFlag}
                 />
             </div>
         );
@@ -128,6 +209,13 @@ class Comments extends React.Component {
 }
 
 export default compose(
-    graphql(GET_ACHIEVEMENT_COMMENTS_QUERY, { name: "getAchivementComments" }),
-    graphql(DELETE_ACHIEVEMENT_COMMENTS_QUERY, { name: "deleteAchivementComment" })
-)(Comments);
+    graphql(GET_ACHIEVEMENT_COMMENTS_QUERY, {name: "getAchievementComments"}),
+    graphql(DELETE_ACHIEVEMENT_COMMENTS_QUERY, {name: "deleteAchievementComment"}),
+    graphql(ADD_ACHIEVEMENT_COMMENTS_QUERY, {name: "addAchievementComment"}),
+    graphql(EDIT_ACHIEVEMENT_COMMENTS_QUERY, {name: "editAchievementComment"}),
+    graphql(GET_ITEM_COMMENTS_QUERY, {name: "getItemComments"}),
+    graphql(ADD_ITEM_COMMENT_QUERY, {name: "addItemComment"}),
+    graphql(EDIT_ITEM_COMMENT_QUERY, {name: "editItemComment"}),
+    graphql(DELETE_ITEM_COMMENT_QUERY, {name: "deleteItemComment"})
+)
+(Comments);
